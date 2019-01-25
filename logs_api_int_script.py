@@ -48,11 +48,12 @@ CH_TABLE = 'events_all'
 
 
 def get_create_date(api_key, token):
-    app_details_url = 'https://api.appmetrica.yandex.ru/management/v1/application/{id}?oauth_token={token}'.format(
-        id=api_key,
-        token=token
+    app_details_url = 'https://api.appmetrica.yandex.ru/management/v1/application/{id}'.format(
+        id=api_key
     )
-    r = requests.get(app_details_url)
+    
+    headers = {'Authorization': 'OAuth {token}'.format(token=token)}
+    r = requests.get(app_details_url, headers = headers)
     create_date = None
     if r.status_code == 200:
         app_details = json.loads(r.text)
@@ -199,11 +200,12 @@ def insert_data_to_prod(db, table):
     get_clickhouse_data(q)
 
 def process_date(date, token, api_key, db, table):
-    url_tmpl = 'https://api.appmetrica.yandex.ru/logs/v1/export/events.csv?application_id={api_key}&date_since={date1}%2000%3A00%3A00&date_until={date2}%2023%3A59%3A59&date_dimension=default&fields=event_name%2Cevent_timestamp%2Cappmetrica_device_id%2Cos_name%2Ccountry_iso_code%2Ccity%2Capp_version_name%2Capp_build_number&oauth_token={token}'
-    url = url_tmpl.format(api_key=api_key, date1=date, date2=date, token=token)
+    url_tmpl = 'https://api.appmetrica.yandex.ru/logs/v1/export/events.csv?application_id={api_key}&date_since={date1}%2000%3A00%3A00&date_until={date2}%2023%3A59%3A59&date_dimension=default&fields=event_name%2Cevent_timestamp%2Cappmetrica_device_id%2Cos_name%2Ccountry_iso_code%2Ccity%2Capp_version_name%2Capp_build_number'
+    url = url_tmpl.format(api_key=api_key, date1=date, date2=date)
+    headers = {'Authorization': 'OAuth {token}'.format(token=token)}
 
     # print url
-    r = requests.get(url)
+    r = requests.get(url, headers = headers)
 
     while r.status_code != 200:
         print r.status_code,
